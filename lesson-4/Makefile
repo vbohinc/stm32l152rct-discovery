@@ -3,7 +3,7 @@ main.hex: main.elf
 main.elf: main.o main.ld
 	arm-none-eabi-ld -v -T main.ld -nostartfiles -o main.elf main.o
 main.o: Makefile main.s
-	arm-none-eabi-as -ggdb -mlittle-endian -mcpu=cortex-m3 -march=armv7-m -mthumb -ahls=main.lst -g -o main.o main.s
+	arm-none-eabi-as -ggdb -mlittle-endian -mcpu=cortex-m3 -march=armv6-m -mthumb -mapcs-32 -gstabs -ahls=main.lst -g -o main.o main.s
 openocd:
 	openocd -f openocd.cfg
 flash: main.elf

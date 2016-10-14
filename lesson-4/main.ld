@@ -1,4 +1,4 @@
-ENTRY(main)
+ENTRY(start)
 
 MEMORY
 {
@@ -19,12 +19,9 @@ SECTIONS
 
         .text :  {  *(.text)   }
 
-
-
-        /* constant data follows code but still in flash */
         .data :
         { 
-          *(.data) 
+          *(.data)
           *(.rom)
         }
 

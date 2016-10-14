@@ -2,34 +2,27 @@ ENTRY(start)
 
 MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 128K
-  RAM  (xrw) : ORIGIN = 0x20000000, LENGTH = 16K
+	FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 256K
+	RAM  (rwx) : ORIGIN = 0x20000000, LENGTH = 32K
 }
 
 SECTIONS
 {
-    /* for Cortex devices, the beginning of the startup code is stored in the .isr_vector section, which goes to FLASH */
-    .isr_vector :
-    {
-	. = ALIGN(4);
-        KEEP(*(.isr_vector))            /* Startup code */
-	. = ALIGN(4);
-    } >FLASH
- 
+	.isr_vector : {
+		. = ALIGN(4);
+		KEEP(*(.isr_vector))            /* Startup code */
+		. = ALIGN(4);
+	} >FLASH
 
         .text :  {  *(.text)   }
 
-
-
-        /* constant data follows code but still in flash */
         .data :
         { 
-          *(.data) 
+          *(.data)
           *(.rom)
         }
 
-        /* internal RAM starts at 0x20000000 */
-        . = 0x20000000; 
+        . = 0x20000000;
         .ram : { *(.ram) }
 
         .bss :
@@ -38,5 +31,3 @@ SECTIONS
           *(.ram)
         }
 }
-
-

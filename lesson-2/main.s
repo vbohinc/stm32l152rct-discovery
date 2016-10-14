@@ -24,7 +24,7 @@ isr_vectors:
 	.equ  BootRAM, 0xF108F85F
 
 	.word STACKINIT
-	.word start    // Reset_Handler
+	.word main     // Reset_Handler
 	.word _handler // NMI_Handler
 	.word _handler // HardFault_Handler
 	.word _handler // MemManage_Handler
@@ -107,9 +107,10 @@ isr_vectors:
 .equ GPIOB_MODER, 0x40020400
 .equ GPIOB_ODR, 0x40020414
 
-.section .text.start
+.global main
+.section .text
 .type start, %function
-start:
+main:
 	ldr r6, = RCC_AHBENR
 	mov r0, 0x2
 	str r0, [r6]
@@ -123,6 +124,7 @@ start:
 	str r2, [r6]
 
 loop:
+	nop
 	b loop
 
 _handler:

@@ -3,4 +3,4 @@ monitor arm semihosting enable
 monitor reset halt
 file main.elf
 load main.elf
-continue
+monitor reset run

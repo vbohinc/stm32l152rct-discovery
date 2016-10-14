@@ -1,7 +1,22 @@
 .thumb
+.cpu cortex-m3
 .syntax unified
 
 .equ STACKINIT,0x20002000
+
+.macro FUNC name
+	.func \name,\name
+	.type \name,%function
+	.thumb_func
+	.align
+	\name\():
+.endm
+
+.macro ENDFUNC name
+	.size
+	.pool
+	.endfunc
+.endm
 
 .section .text
 	.org 0
@@ -24,7 +39,7 @@ isr_vectors:
 	.word _handler // DebugMon_Handler
 	.word _handler // 0
 	.word _handler // PendSV_Handler
-	.word _handler // SysTick_Handler
+	.word SysTick_Handler // SysTick_Handler
 	.word _handler // WWDG_IRQHandler
 	.word _handler // PVD_IRQHandler
 	.word _handler // TAMPER_STAMP_IRQHandler
@@ -89,17 +104,85 @@ isr_vectors:
 	.word _handler // 0
 	.word BootRAM
 
-.section .text.start
+.equ SYSTICK_CSR, 0xE000E010
+.equ SYSTICK_RVR, 0xE000E014
+.equ SYSTICK_CVR, 0xE000E018
+
+.equ RCC_AHBENR,  0x4002381C
+.equ GPIOB_MODER, 0x40020400
+.equ GPIOB_ODR,   0x40020414
+
+.global start
 .type start, %function
 start:
-loop:
-	nop
-	nop
-	nop
-	nop
-	nop
-	b start
+	ldr r6, = RCC_AHBENR
+	mov r0, 0x2
+	str r0, [r6]
+
+	ldr r6, = GPIOB_MODER
+	ldr r0, = 0x00005000
+	str r0, [r6]
+
+	ldr r6, = SYSTICK_CSR
+	ldr r0, = 0x00000000
+	str r0, [r6]
+
+	ldr r6, = SYSTICK_RVR
+	ldr r0, = 0x01FFFFFF
+	str r0, [r6]
+
+	ldr r6, = SYSTICK_CVR
+	ldr r0, = 0
+	str r0, [r6]
+
+	ldr r6, = SYSTICK_CSR
+	ldr r0, = 0x00000007
+	str r0, [r6]
+wait:
+/*
+	ldr r6, = GPIOB_ODR
+	mov r2, 0x00000040
+	str r2, [r6]
+
+	wfi
+
+	ldr r6, = GPIOB_ODR
+	ldr r2, = 0x00000000
+	str r2, [r6]
+
+	wfi
+*/
+	wfi
+
+	// SYS_WRITE0 (msg)
+	mov r0,0x04
+	ldr %r1,=msgloop
+	bkpt 0xab
+
+	b wait
 
 _handler:
 	nop
 	b _handler
+
+.type SysTick_Handler, %function
+SysTick_Handler:
+	stmdb sp!,{r0,r1,sl,lr}
+
+	// SYS_WRITE0 (msg)
+	mov r0,0x04
+	ldr %r1,=msg
+	bkpt 0xab
+
+	ldmia sp!,{r0,r1,sl,lr}
+	bx lr
+
+msgloop:
+	.ascii "Loop!\n\0"
+msg:
+	.ascii "SysTick_Handler!\n\0"
+	len = . -msg
+args:
+	.word 2
+	.word msg
+	.word len

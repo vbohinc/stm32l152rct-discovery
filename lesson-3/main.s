@@ -3,6 +3,20 @@
 
 .equ STACKINIT,0x20002000
 
+.macro FUNC name
+	.func \name,\name
+	.type \name,%function
+	.thumb_func
+	.align
+	\name\():
+.endm
+
+.macro ENDFUNC name
+	.size
+	.pool
+	.endfunc
+.endm
+
 .section .text
 	.org 0
 
@@ -89,17 +103,27 @@ isr_vectors:
 	.word _handler // 0
 	.word BootRAM
 
+.equ RCC_AHBENR, 0x4002381C
+.equ GPIOB_MODER, 0x40020400
+.equ GPIOB_ODR, 0x40020414
+
 .section .text.start
 .type start, %function
 start:
+	ldr r6, = RCC_AHBENR
+	mov r0, 0x2
+	str r0, [r6]
+
+	ldr r6, = GPIOB_MODER
+	ldr r0, = 0x00005000
+	str r0, [r6]
+
+	ldr r6, = GPIOB_ODR
+	ldr r2, = 0xC0
+	str r2, [r6]
+
 loop:
-	nop
-	nop
-	nop
-	nop
-	nop
-	b start
+	b loop
 
 _handler:
-	nop
 	b _handler
